@@ -1,0 +1,56 @@
+project: project_history4hitl
+description: >
+  A recursive multi-agent swarm replacing a claude-code style framework using locally hosted
+  and API-based LLMs within the pi-coding-agent harness.
+
+roles:
+  scout:
+    model: marcus  # Llama3-70B-it
+    capabilities:
+      - tool_use
+      - json_output
+      - bash_delegation
+    provider: fractal-local
+    base_url: "http://localhost:8000/v1"
+    description: "Orchestrator. Handles file I/O, drafts code, recursively runs tests, and delegates via pi CLI."
+    instructions: "Read AGENTS.md for execution loops and recursive execution using pi."
+    max_iterations: 3
+    fallback_to: worker_light
+
+  worker_light:
+    model: gemini-2.5-flash-lite # Sergey
+    description: "Fast formatting/lightweight tasks."
+    max_iterations: 1
+    fallback_to: worker_code
+
+  worker_code:
+    model: timothee # Codestral-22B
+    description: "Logic specialist (Python/C++). Delegated to by Marcus via 'pi -p --model timothee'."
+    max_iterations: 2
+    fallback_to: expert_logic
+
+  expert_logic:
+    model: gemini-flash-latest # Larry
+    description: "Complex logic specialist. Invoked if Codestral gets stuck."
+    max_iterations: 2
+    fallback_to: grandmaster
+
+  grandmaster:
+    model: gemini-3.1-pro-preview # Geoffrey
+    description: "The architect of last resort. Invoked for critical failures."
+
+policies:
+  - if: task == "file_modification"
+    use: scout
+  - if: error_count > 3
+    use: expert_logic
+  - if: token_count > 30000
+    use: worker_light
+    
+sandbox:
+  read_only:
+    - "orchestrator-policy.yaml"
+    - "AGENTS.md"
+  forbidden:
+    - ".env"
+    - "/etc/*"

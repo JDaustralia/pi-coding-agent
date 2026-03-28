@@ -1,0 +1,5 @@
+modelId,Prompt50,Response50,totalTokens
+Gemini-flash-latest,Where is tokyo,"Tokyo is the capital and largest city of **Japan**, located on the eastern coast of the island of **Honshu**, at the head of Tokyo Bay.",1071
+Gemini-flash-latest,This is where the user asks a question,This is the response to that question,1555
+gemini-3.1-pro-preview,This is a second question.,"This is an example long answer.  We are only interested in the first 50 words of each response. Beyond the 50 word mark, the value to the HiTL diminishes but the cost of context and storage goes up linearly. So beyond a certain point, let’s call it 50 words here",3912
+Gemini-flash-latest,This is yet another question.,And here is another answer.,2953

@@ -1,0 +1,38 @@
+{
+  "providers": {
+    "fractal-local": {
+      "baseUrl": "http://localhost:8000/v1",
+      "api": "openai-completions",
+      "apiKey": "sk-fractal-12345",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "marcus",
+          "name": "Llama-3-70B-Instruct",
+          "context": 12288,
+          "maxOut": 2048,
+          "thinking": true
+        }
+      ]
+    },
+    "vllm-local": {
+      "baseUrl": "http://localhost:8001/v1",
+      "api": "openai-completions",
+      "apiKey": "sk-fractal-12345",
+      "compat": {
+        "supportsDeveloperRole": false
+      },
+      "models": [
+        {
+          "id": "timothee",
+          "name": "Codestral-22B",
+          "context": 32768,
+          "maxOut": 8192
+        }
+      ]
+    }
+  }
+}
