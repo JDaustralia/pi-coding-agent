@@ -1,6 +1,6 @@
 project: project_history4hitl
 description: >
-  A recursive multi-agent swarm replacing a claude-code style framework using locally hosted
+  A recursive multi-agent swarm using locally hosted
   and API-based LLMs within the pi-coding-agent harness.
 
 roles:
@@ -12,40 +12,44 @@ roles:
       - bash_delegation
     provider: fractal-local
     base_url: "http://localhost:8000/v1"
-    description: "Orchestrator. Handles file I/O, drafts code, recursively runs tests, and delegates via pi CLI."
-    instructions: "Read AGENTS.md for execution loops and recursive execution using pi."
-    max_iterations: 3
+    description: "Orchestrator. Acts purely as a manager. Does NOT draft code itself. Evaluates tests and delegates to sub-agents via pi CLI tracking their budgets."
+    instructions: "Read AGENTS.md for execution loops, budget limits, and recursive execution using pi."
+    max_iterations: 15
+    fallback_to: worker_light
+
+  worker_code:
+    model: timothee # Codestral-22B
+    description: "Primary logic specialist (Python/C++). Delegated to by Marcus via 'pi -p --model timothee'."
+    max_iterations: 4
     fallback_to: worker_light
 
   worker_light:
     model: gemini-2.5-flash-lite # Sergey
-    description: "Fast formatting/lightweight tasks."
-    max_iterations: 1
-    fallback_to: worker_code
-
-  worker_code:
-    model: timothee # Codestral-22B
-    description: "Logic specialist (Python/C++). Delegated to by Marcus via 'pi -p --model timothee'."
-    max_iterations: 2
+    description: "Fast first-escalation fallback. Used if Timothee fails 4 times."
+    max_iterations: 10
+    budget_tokens: 1000000
     fallback_to: expert_logic
 
   expert_logic:
     model: gemini-flash-latest # Larry
-    description: "Complex logic specialist. Invoked if Codestral gets stuck."
-    max_iterations: 2
+    description: "Complex logic specialist. Invoked if Sergey burns through his 1M token budget."
+    max_iterations: 5
+    budget_tokens: 1000000
     fallback_to: grandmaster
 
   grandmaster:
     model: gemini-3.1-pro-preview # Geoffrey
-    description: "The architect of last resort. Invoked for critical failures."
+    description: "The architect of last resort. Invoked for critical failures if Larry exceeds 1M tokens."
 
 policies:
   - if: task == "file_modification"
-    use: scout
-  - if: error_count > 3
-    use: expert_logic
-  - if: token_count > 30000
+    use: worker_code
+  - if: worker_code.iterations >= 4
     use: worker_light
+  - if: worker_light.token_count > 1000000
+    use: expert_logic
+  - if: expert_logic.token_count > 1000000
+    use: grandmaster
     
 sandbox:
   read_only:
